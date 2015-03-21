@@ -1,56 +1,38 @@
-/* 
-  This a simple example of the aREST Library for Arduino (Uno/Mega/Due/Teensy)
-  using the CC3000 WiFi chip. See the README file for more details.
- 
-  Written in 2014 by Marco Schwartz under a GPL license. 
-*/
 
-// Import required libraries
 #include <Adafruit_CC3000.h>
 #include <SPI.h>
 #include <CC3000_MDNS.h>
 #include <aREST.h>
 #include <avr/wdt.h>
 
-// These are the pins for the CC3000 chip if you are using a breakout board
 #define ADAFRUIT_CC3000_IRQ   3
 #define ADAFRUIT_CC3000_VBAT  5
 #define ADAFRUIT_CC3000_CS    10
 #define LED_PIN 8
 
-// Create CC3000 instance
 Adafruit_CC3000 cc3000 = Adafruit_CC3000(ADAFRUIT_CC3000_CS, ADAFRUIT_CC3000_IRQ, ADAFRUIT_CC3000_VBAT,
                                          SPI_CLOCK_DIV2);
 // Create aREST instance
 aREST rest = aREST();
-
-// Your WiFi SSID and password                                         
+                                       
 #define WLAN_SSID       "AndroidAP"
 #define WLAN_PASS       "team1234"
 #define WLAN_SECURITY   WLAN_SEC_WPA2
 
-// The port to listen for incoming TCP connections 
 #define LISTEN_PORT           80
 
-// Server instance
 Adafruit_CC3000_Server restServer(LISTEN_PORT);
 
-// DNS responder instance
 MDNSResponder mdns;
 
-// Variables to be exposed to the API
-volatile int flag = 0;
 
 void setup(void)
 {  
   // Start Serial
   Serial.begin(115200);
-  attachInterrupt(0, flagFunc, RISING); //attach interrupt to pin 3
-
-  rest.variable("flag",&(int) flag);
   
   // Function to be exposed
-  rest.function("led",ledControl);
+  //rest.function("led",ledControl);
   
   // Give name and ID to device
   rest.set_id("008");
@@ -71,9 +53,9 @@ void setup(void)
   Serial.println();
   
   // Print CC3000 IP address. Enable if mDNS doesn't work
-  //while (! displayConnectionDetails()) {
-   // delay(1000);
-  //}
+  while (! displayConnectionDetails()) {
+    delay(1000);
+  }
   
   // Start multicast DNS responder
   if (!mdns.begin("arduino", cc3000)) {
@@ -86,6 +68,7 @@ void setup(void)
 
   // Enable watchdog
   wdt_enable(WDTO_4S);
+
 }
 
 void loop() {
@@ -101,9 +84,6 @@ void loop() {
   // Check connection, reset if connection is lost
   if(!cc3000.checkConnected()){while(1){}}
   wdt_reset();
-  
-  buttonStatus = flag;
-  Serial.println(flag);
 }
 
 // Print connection details of the CC3000 chip
@@ -128,17 +108,13 @@ bool displayConnectionDetails(void)
   }
 }
 
-void flagFunc()
-{
-    flag = !flag;  //set flag to high when the button is pushed
-}
-
-// Custom function accessible by the API
-int ledControl(String command) {
-  
-  // Get state from command
-  int state = command.toInt();
-  
-  digitalWrite(LED_PIN,state);
-  return 1;
-}
+//
+//// Custom function accessible by the API
+//int ledControl(String command) {
+//  
+//  // Get state from command
+//  int state = command.toInt();
+//  
+//  digitalWrite(LED_PIN,state);
+//  return 1;
+//}
